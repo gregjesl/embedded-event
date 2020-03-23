@@ -44,9 +44,34 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
         reg.instance;
         ));
     #else
-    this->lock_add_queue();
+    // Lock the queues
+    this->lock_add_remove_queues();
+
+    // Check for an unregistration
+    size_t i = 0;
+    while(i < this->remove_queue.size()) {
+
+        // Check for same event
+        if(this->remove_queue.at(i).event != reg.event) {
+            i++;
+            continue;
+        }
+
+        // Check for same handler
+        if(this->remove_queue.at(i).handler != reg.handler) {
+            i++;
+            continue;
+        }
+
+        // Remove the unregistration
+        this->remove_queue.erase(this->remove_queue.begin() + i);
+    }
+
+    // Add the registration
     this->add_queue.push_back(reg);
-    this->unlock_add_queue();
+
+    // Unlock the queues
+    this->unlock_add_remove_queues();
     #endif
 
     // Return the registration
@@ -62,9 +87,34 @@ void event::group::remove(event::registration reg)
         reg.event,
         reg.instance));
     #else
-    this->lock_remove_queue();
+    // Lock the queues
+    this->lock_add_remove_queues();
+
+    // Check for an registration
+    size_t i = 0;
+    while(i < this->add_queue.size()) {
+
+        // Check for same event
+        if(this->add_queue.at(i).event != reg.event) {
+            i++;
+            continue;
+        }
+
+        // Check for same handler
+        if(this->add_queue.at(i).handler != reg.handler) {
+            i++;
+            continue;
+        }
+
+        // Remove the unregistration
+        this->add_queue.erase(this->add_queue.begin() + i);
+    }
+
+    // Remove the registration
     this->remove_queue.push_back(reg);
-    this->unlock_remove_queue();
+
+    // Unlock the queues
+    this->unlock_add_remove_queues();
     #endif
 }
 
@@ -134,22 +184,12 @@ void event::group::dispatch()
     #endif
 }
 
-void event::group::lock_add_queue()
+void event::group::lock_add_remove_queues()
 {
 
 }
 
-void event::group::unlock_add_queue()
-{
-    
-}
-
-void event::group::lock_remove_queue()
-{
-
-}
-
-void event::group::unlock_remove_queue()
+void event::group::unlock_add_remove_queues()
 {
     
 }
@@ -167,7 +207,7 @@ void event::group::unlock_event_queue()
 void event::group::process_handler_changes()
 {
     // Lock the addition queue
-    this->lock_add_queue();
+    this->lock_add_remove_queues();
 
     // Loop until all adds are adjuticated
     while(this->add_queue.size() > 0) {
@@ -210,12 +250,6 @@ void event::group::process_handler_changes()
         }
     }
 
-    // Unlock the addition queue
-    this->unlock_add_queue();
-
-    // Lock the removal queue
-    this->lock_remove_queue();
-
     // Loop until all removes are adjuticated
     while(this->remove_queue.size() > 0) {
 
@@ -248,7 +282,7 @@ void event::group::process_handler_changes()
     }
 
     // Unlock the removal queue
-    this->unlock_remove_queue();
+    this->unlock_add_remove_queues();
 }
 
 #endif

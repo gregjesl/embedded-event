@@ -68,12 +68,9 @@ namespace event
         unsigned int ms_timetout;
         #else
         std::deque<registration> add_queue;
-        void lock_add_queue();
-        void unlock_add_queue();
-
         std::deque<registration> remove_queue;
-        void lock_remove_queue();
-        void unlock_remove_queue();
+        void lock_add_remove_queues();
+        void unlock_add_remove_queues();
 
         std::deque<wrapper*> event_queue;
         void lock_event_queue();
