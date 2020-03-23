@@ -26,7 +26,7 @@ else()
 
     add_library(${PROJECT_NAME}
         src/embedded-event.cpp
-        src/wrapper.cpp
+        src/embedded-container.cpp
     )
 
     # Support testing

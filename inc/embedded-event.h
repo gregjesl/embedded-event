@@ -36,11 +36,11 @@ namespace event
         std::vector<callback> callbacks;
     };
 
-    class wrapper
+    class container
     {
     public:
-        wrapper(const int32_t event, const void *data, const size_t data_length);
-        virtual ~wrapper();
+        container(const int32_t event, const void *data, const size_t data_length);
+        virtual ~container();
         const int32_t event_id;
         void *data;
     };
@@ -72,7 +72,7 @@ namespace event
         void lock_add_remove_queues();
         void unlock_add_remove_queues();
 
-        std::deque<wrapper*> event_queue;
+        std::deque<container*> event_queue;
         void lock_event_queue();
         void unlock_event_queue();
         

@@ -132,7 +132,7 @@ void event::group::post(int32_t event, const void* data, const size_t data_lengt
     #else
     this->lock_event_queue();
     this->event_queue.push_back(
-        new event::wrapper(event, data, data_length)
+        new event::container(event, data, data_length)
     );
     this->unlock_event_queue();
     #endif
@@ -168,7 +168,7 @@ void event::group::dispatch()
     this->process_handler_changes();
     this->lock_event_queue();
     while(this->event_queue.size() > 0) {
-        wrapper *evt = this->event_queue.front();
+        event::container *evt = this->event_queue.front();
         this->event_queue.pop_front();
         this->unlock_event_queue();
         event::event_map *map = this->find_map(evt->event_id);
@@ -201,7 +201,7 @@ void event::group::lock_event_queue()
 
 void event::group::unlock_event_queue()
 {
-    
+
 }
 
 void event::group::process_handler_changes()
