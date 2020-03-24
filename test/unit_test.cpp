@@ -2,9 +2,6 @@
 #include "test.h"
 #include <string>
 
-// Create the event group
-event::group test("TEST");
-
 // Set the data string
 const char* data_string = "Hello world!\0";
 
@@ -28,6 +25,9 @@ void handler(void* context, const char* name, int32_t event, void* data)
 
 int main(void)
 {
+    // Create the event group
+    event::group test("TEST");
+
     // Verify the starting condition
     TEST_EQUAL(handler_count, 0);
 

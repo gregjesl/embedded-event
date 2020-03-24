@@ -1,4 +1,5 @@
 #include "embedded-event.h"
+#include "embedded-event-mutex.h"
 
 event::group::group(const char* name)
 :   name(name)
@@ -18,12 +19,12 @@ event::group::~group()
     ESP_ERROR_CHECK(esp_event_loop_delete(this->loop_handle));
     #else
     // Clear the queue
-    this->lock_event_queue();
+    this->event_mutex.lock();
     while(this->event_queue.size() > 0) {
         delete this->event_queue.front();
         this->event_queue.pop_front();
     }
-    this->unlock_event_queue();
+    this->event_mutex.unlock();
     #endif
 }
 
@@ -45,7 +46,7 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
         ));
     #else
     // Lock the queues
-    this->lock_add_remove_queues();
+    this->registration_mutex.lock();
 
     // Check for an unregistration
     size_t i = 0;
@@ -71,7 +72,7 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
     this->add_queue.push_back(reg);
 
     // Unlock the queues
-    this->unlock_add_remove_queues();
+    this->registration_mutex.unlock();
     #endif
 
     // Return the registration
@@ -88,7 +89,7 @@ void event::group::remove(event::registration reg)
         reg.instance));
     #else
     // Lock the queues
-    this->lock_add_remove_queues();
+    this->registration_mutex.lock();
 
     // Check for an registration
     size_t i = 0;
@@ -114,7 +115,7 @@ void event::group::remove(event::registration reg)
     this->remove_queue.push_back(reg);
 
     // Unlock the queues
-    this->unlock_add_remove_queues();
+    this->registration_mutex.unlock();
     #endif
 }
 
@@ -130,11 +131,11 @@ void event::group::post(int32_t event, const void* data, const size_t data_lengt
         1000
         );
     #else
-    this->lock_event_queue();
+    this->event_mutex.lock();
     this->event_queue.push_back(
         new event::container(event, data, data_length)
     );
-    this->unlock_event_queue();
+    this->event_mutex.unlock();
     #endif
 }
 
@@ -166,11 +167,11 @@ void event::group::dispatch()
         );
     #else
     this->process_handler_changes();
-    this->lock_event_queue();
+    this->event_mutex.lock();
     while(this->event_queue.size() > 0) {
         event::container *evt = this->event_queue.front();
         this->event_queue.pop_front();
-        this->unlock_event_queue();
+        this->event_mutex.unlock();
         event::event_map *map = this->find_map(evt->event_id);
         if(map && map->callbacks.size() > 0) {
             for(size_t i = 0; i < map->callbacks.size(); i++) {
@@ -180,34 +181,16 @@ void event::group::dispatch()
         }
         delete evt;
         this->process_handler_changes();
+        this->event_mutex.lock();
     }
+    this->event_mutex.unlock();
     #endif
-}
-
-void event::group::lock_add_remove_queues()
-{
-
-}
-
-void event::group::unlock_add_remove_queues()
-{
-    
-}
-
-void event::group::lock_event_queue()
-{
-
-}
-
-void event::group::unlock_event_queue()
-{
-
 }
 
 void event::group::process_handler_changes()
 {
     // Lock the addition queue
-    this->lock_add_remove_queues();
+    this->registration_mutex.lock();
 
     // Loop until all adds are adjuticated
     while(this->add_queue.size() > 0) {
@@ -282,7 +265,7 @@ void event::group::process_handler_changes()
     }
 
     // Unlock the removal queue
-    this->unlock_add_remove_queues();
+    this->registration_mutex.unlock();
 }
 
 #endif

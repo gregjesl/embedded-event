@@ -2,13 +2,9 @@
 #define EMBEDDED_EVENT_H
 #include <stdlib.h>
 #include <cstdint>
-
-#ifdef ESP_PLATFORM
-#include "esp_event.h"
-#else
 #include <deque>
 #include <vector>
-#endif
+#include "embedded-event-mutex.h"
 
 /*! \brief Namespace for embedded events */
 namespace event
@@ -69,12 +65,10 @@ namespace event
         #else
         std::deque<registration> add_queue;
         std::deque<registration> remove_queue;
-        void lock_add_remove_queues();
-        void unlock_add_remove_queues();
+        event::mutex registration_mutex;
 
         std::deque<container*> event_queue;
-        void lock_event_queue();
-        void unlock_event_queue();
+        event::mutex event_mutex;
         
         std::vector<event_map> handlers;
         void process_handler_changes();

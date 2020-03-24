@@ -6,7 +6,7 @@ if (ESP_PLATFORM)
         PUBLIC ESP_PLATFORM)
 
     idf_component_register(
-        SRCS "src/embedded-event.cpp"
+        SRCS src/embedded-event.cpp src/embedded-container.cpp src/embedded-event-mutex.cpp
         INCLUDE_DIRS "inc"
     )
 
@@ -27,7 +27,25 @@ else()
     add_library(${PROJECT_NAME}
         src/embedded-event.cpp
         src/embedded-container.cpp
+        src/embedded-event-mutex.cpp
     )
+
+    find_package(Threads)
+    if(Threads_FOUND)
+        if(CMAKE_USE_PTHREADS_INIT AND THREADS_PREFER_PTHREAD_FLAG)
+            target_compile_definitions(${PROJECT_NAME}
+                PUBLIC EMBEDDED_EVENT_PTHREADS)
+        else()
+            target_compile_definitions(${PROJECT_NAME}
+                PUBLIC EMBEDDED_EVENT_CPP11)
+        endif()
+    else()
+        target_compile_definitions(${PROJECT_NAME}
+            PUBLIC EMBEDDED_EVENT_NO_THREADING)
+    endif()
+
+    target_compile_definitions("${PROJECT_NAME}"
+        PUBLIC EMBEDDED_EVENT_NO_THREADING)
 
     # Support testing
     enable_testing()
