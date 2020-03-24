@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.9)
 if (ESP_PLATFORM)
 
     target_compile_definitions(${PROJECT_NAME}
-        PUBLIC ESP_PLATFORM)
+        PUBLIC EMBEDDED_EVENT_ESP32)
 
     idf_component_register(
         SRCS src/embedded-event.cpp src/embedded-container.cpp src/embedded-event-mutex.cpp

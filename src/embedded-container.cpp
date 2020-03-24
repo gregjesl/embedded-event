@@ -1,8 +1,6 @@
 #include "embedded-event.h"
 #include <string.h>
 
-#ifndef ESP_PLATFORM
-
 event::container::container(const int32_t event, const void *data, const size_t data_length)
 :   event_id(event)
 {
@@ -14,5 +12,3 @@ event::container::~container()
 {
     free(this->data);
 }
-
-#endif
