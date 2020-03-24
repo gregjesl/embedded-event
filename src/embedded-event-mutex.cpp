@@ -24,7 +24,7 @@ event::mutex::~mutex()
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_destroy(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_OMP
-    omp_destory_lock(&this->p_mutex);
+    omp_destroy_lock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_NO_THREADING
     // Do nothing
     #else
@@ -39,7 +39,7 @@ void event::mutex::lock()
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_lock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_OMP
-    omp_destory_lock(&this->p_mutex);
+    omp_set_lock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_NO_THREADING
     if(this->is_locked) throw std::runtime_error("Deadlock");
     this->is_locked = true;
@@ -55,7 +55,7 @@ void event::mutex::unlock()
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_unlock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_OMP
-    omp_destory_unlock(&this->p_mutex);
+    omp_unset_lock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_NO_THREADING
     if(!this->is_locked) throw std::runtime_error("Mutex not locked");
     this->is_locked = false;
