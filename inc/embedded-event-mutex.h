@@ -1,7 +1,8 @@
 #ifndef EMBEDDED_EVENT_MUTEX_H
 #define EMBEDDED_EVENT_MUTEX_H
 
-#if defined EMBEDDED_EVENT_ESP32
+#if defined ESP_PLATFORM
+#include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #elif defined EMBEDDED_EVENT_PTHREADS
 #include <pthread.h>
@@ -30,7 +31,7 @@ namespace event
         void lock();
         void unlock();
     private:
-        #if defined EMBEDDED_EVENT_ESP32
+        #if defined ESP_PLATFORM
         SemaphoreHandle_t p_mutex;
         #elif defined EMBEDDED_EVENT_PTHREADS
         pthread_mutex_t p_mutex;

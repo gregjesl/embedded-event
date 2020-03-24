@@ -4,7 +4,7 @@
 
 event::mutex::mutex()
 {
-    #if defined EMBEDDED_EVENT_ESP32
+    #if defined ESP_PLATFORM
     this->p_mutex = xSemaphoreCreateMutex();
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_init(&this->p_mutex, NULL);
@@ -19,7 +19,7 @@ event::mutex::mutex()
 
 event::mutex::~mutex()
 {
-    #if defined EMBEDDED_EVENT_ESP32
+    #if defined ESP_PLATFORM
     vSemaphoreDelete(this->p_mutex);
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_destroy(&this->p_mutex);
@@ -34,7 +34,7 @@ event::mutex::~mutex()
 
 void event::mutex::lock()
 {
-    #if defined EMBEDDED_EVENT_ESP32
+    #if defined ESP_PLATFORM
     xSemaphoreTake(this->p_mutex, portMAX_DELAY);
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_lock(&this->p_mutex);
@@ -50,7 +50,7 @@ void event::mutex::lock()
 
 void event::mutex::unlock()
 {
-    #if defined EMBEDDED_EVENT_ESP32
+    #if defined ESP_PLATFORM
     xSemaphoreGive(this->p_mutex);
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_mutex_unlock(&this->p_mutex);

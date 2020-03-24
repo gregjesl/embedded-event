@@ -4,20 +4,11 @@
 event::group::group(const char* name)
 :   name(name)
 {
-    #ifdef ESP_PLATFORM
-    esp_event_loop_args_t loop_without_task_args = {
-        .queue_size = 5,
-        .task_name = NULL // no task will be created
-    };
-    ESP_ERROR_CHECK(esp_event_loop_create(&loop_without_task_args, &this->loop_handle));
-    #endif
+
 }
 
 event::group::~group()
 {
-    #ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_event_loop_delete(this->loop_handle));
-    #else
     // Clear the queue
     this->event_mutex.lock();
     while(this->event_queue.size() > 0) {
@@ -25,7 +16,6 @@ event::group::~group()
         this->event_queue.pop_front();
     }
     this->event_mutex.unlock();
-    #endif
 }
 
 event::registration event::group::add(int32_t event_id, event::handler_fun fun, void* context)
@@ -35,16 +25,6 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
     reg.context = context;
     reg.event = event_id;
 
-    #ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_event_handler_register(
-        this->loop_handle,
-        this->name, 
-        event_id, 
-        handler,
-        context,
-        reg.instance;
-        ));
-    #else
     // Lock the queues
     this->registration_mutex.lock();
 
@@ -73,7 +53,6 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
 
     // Unlock the queues
     this->registration_mutex.unlock();
-    #endif
 
     // Return the registration
     return reg;
@@ -81,13 +60,6 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
 
 void event::group::remove(event::registration reg)
 {
-    #ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_event_handler_unregister_with(
-        this->loop_handle,
-        this->name,
-        reg.event,
-        reg.instance));
-    #else
     // Lock the queues
     this->registration_mutex.lock();
 
@@ -116,37 +88,16 @@ void event::group::remove(event::registration reg)
 
     // Unlock the queues
     this->registration_mutex.unlock();
-    #endif
 }
 
 void event::group::post(int32_t event, const void* data, const size_t data_length)
 {
-    #ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_event_post_to(
-        this->loop_handle, 
-        this->name, 
-        event,
-        *data, 
-        data_length, 
-        1000
-        );
-    #else
     this->event_mutex.lock();
     this->event_queue.push_back(
         new event::container(event, data, data_length)
     );
     this->event_mutex.unlock();
-    #endif
 }
-
-#ifdef ESP_PLATFORM
-
-void event::group::set_dispatch_timeout(const unsigned int ms_timeout)
-{
-    this->timeout = ms_timeout;
-}
-
-#else
 
 event::event_map* event::group::find_map(int32_t event_id)
 {
@@ -160,12 +111,6 @@ event::event_map* event::group::find_map(int32_t event_id)
 
 void event::group::dispatch()
 {
-    #ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_event_loop_run(
-        this->loop_handle
-        this->timeout / portTICK_PERIOD_MS
-        );
-    #else
     this->process_handler_changes();
     this->event_mutex.lock();
     while(this->event_queue.size() > 0) {
@@ -184,7 +129,6 @@ void event::group::dispatch()
         this->event_mutex.lock();
     }
     this->event_mutex.unlock();
-    #endif
 }
 
 void event::group::process_handler_changes()
@@ -275,5 +219,3 @@ void event::group::process_handler_changes()
     // Unlock the removal queue
     this->registration_mutex.unlock();
 }
-
-#endif
