@@ -205,32 +205,30 @@ void event::group::process_handler_changes()
         event::event_map *map = this->find_map(reg.event);
 
         // Check for a valid entry
-        if(map) {
+        if(!map) {
 
-            // Check for an existing registration
-            size_t i;
-            for(i = 0; i < map->callbacks.size(); i++) {
-                if(map->callbacks.at(i).handler == reg.handler) {
-                    break;
-                }
-            }
-            if(i < map->callbacks.size()) {
-                
-                // The hander is already registered
-                continue;
-            }
-
-            // Add the handler
-            map->callbacks.push_back(reg);
-
-        } else {
-
-            // Add the map
+            // Create a new map
             event::event_map entry;
             entry.event_id = reg.event;
-            entry.callbacks.push_back(reg);
             this->handlers.push_back(entry);
+            map = &this->handlers.back();
         }
+
+        // Check for an existing registration
+        size_t i;
+        for(i = 0; i < map->callbacks.size(); i++) {
+            if(map->callbacks.at(i).handler == reg.handler) {
+                break;
+            }
+        }
+        if(i < map->callbacks.size()) {
+            
+            // The hander is already registered
+            continue;
+        }
+
+        // Add the handler
+        map->callbacks.push_back(reg);
     }
 
     // Loop until all removes are adjuticated
@@ -260,6 +258,16 @@ void event::group::process_handler_changes()
                     // Registration not found
                     i++;
                 }
+            }
+            
+            // Check for an empty map
+            if(map->callbacks.size() == 0) {
+
+                // Find the map index
+                const size_t index = map - &this->handlers[0];
+
+                // Erase the element
+                this->handlers.erase(this->handlers.begin() + index);
             }
         }
     }
