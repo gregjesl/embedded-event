@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.9)
 
 include_directories(../inc)
 
@@ -37,4 +37,5 @@ if(OpenMP_FOUND)
     add_test(NAME "${PROJECT_NAME}_omp" COMMAND "${PROJECT_NAME}_omp")
     target_compile_definitions("${PROJECT_NAME}_omp"
         PUBLIC EMBEDDED_EVENT_OMP)
+    target_link_libraries("${PROJECT_NAME}_omp" PRIVATE OpenMP::OpenMP_CXX)
 endif()
