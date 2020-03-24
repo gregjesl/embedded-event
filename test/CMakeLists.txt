@@ -20,8 +20,6 @@ if(CMAKE_USE_PTHREADS_INIT)
     add_test(NAME "${PROJECT_NAME}_pthreads" COMMAND "${PROJECT_NAME}_pthreads")
     target_compile_definitions("${PROJECT_NAME}_pthreads"
         PUBLIC EMBEDDED_EVENT_PTHREADS)
-else()
-    message(SEND_ERROR "Pthreads not found")
 endif()
 
 # CPP11
