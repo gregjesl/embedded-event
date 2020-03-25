@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 3.9)
 
+set (SRCS
+    src/embedded-event.cpp
+    src/embedded-container.cpp
+    src/embedded-event-mutex.cpp
+    src/embedded-event-task.cpp
+    src/embedded-event-registration.cpp
+)
+
 if (ESP_PLATFORM)
 
     idf_component_register(
-        SRCS src/embedded-event.cpp src/embedded-container.cpp src/embedded-event-mutex.cpp
+        SRCS ${SRCS}
         INCLUDE_DIRS "inc"
     )
 
@@ -22,10 +30,7 @@ else()
     include_directories ("${PROJECT_SOURCE_DIR}/inc")
 
     add_library(${PROJECT_NAME}
-        src/embedded-event.cpp
-        src/embedded-container.cpp
-        src/embedded-event-mutex.cpp
-        src/embedded-event-task.cpp
+        ${SRCS}
     )
 
     find_package(Threads)
