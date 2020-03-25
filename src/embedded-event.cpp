@@ -116,8 +116,8 @@ void event::group::post(int32_t event, const void* data, const size_t data_lengt
 event::event_map* event::group::find_map(int32_t event_id)
 {
     for(size_t i = 0; i < this->handlers.size(); i++) {
-        if(this->handlers.at(i).event_id == event_id) {
-            return &this->handlers[i];
+        if(this->handlers.at(i)->event_id == event_id) {
+            return this->handlers[i];
         }
     }
     return NULL;
@@ -175,10 +175,9 @@ void event::group::process_handler_changes()
         if(!map) {
 
             // Create a new map
-            event::event_map entry;
-            entry.event_id = reg.event;
-            this->handlers.push_back(entry);
-            map = &this->handlers.back();
+            map = new event::event_map();
+            map->event_id = reg.event;
+            this->handlers.push_back(map);
         }
 
         // Lock the map
@@ -241,16 +240,17 @@ void event::group::process_handler_changes()
             if(map->callbacks.size() == 0) {
 
                 // Find the map index
-                const size_t index = map - &this->handlers[0];
+                const size_t index = map - this->handlers[0];
+
+                // Erase the element
+                this->handlers.erase(this->handlers.begin() + index);
 
                 // Unlock the map
                 map->mutex.unlock();
 
-                // WARNING: Potential race condition?
-                // Make maps pointers? 
-
-                // Erase the element
-                this->handlers.erase(this->handlers.begin() + index);
+                // Delete the map
+                delete map;
+                
             } else {
                 
                 // Unlock the map

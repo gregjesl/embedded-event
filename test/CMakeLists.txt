@@ -20,14 +20,18 @@ if(CMAKE_USE_PTHREADS_INIT)
     add_test(NAME "${PROJECT_NAME}_pthreads" COMMAND "${PROJECT_NAME}_pthreads")
     target_compile_definitions("${PROJECT_NAME}_pthreads"
         PUBLIC EMBEDDED_EVENT_PTHREADS)
+    target_link_libraries ("${PROJECT_NAME}_pthreads" ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 # CPP11
-if(WIN32 AND Threads_FOUND)
+if(Threads_FOUND)
     add_executable ("${PROJECT_NAME}_cpp11" unit_test.cpp ${sources})
     add_test(NAME "${PROJECT_NAME}_cpp11" COMMAND "${PROJECT_NAME}_cpp11")
     target_compile_definitions("${PROJECT_NAME}_cpp11"
         PUBLIC EMBEDDED_EVENT_CPP11)
+    if(CMAKE_USE_PTHREADS_INIT)
+        target_link_libraries ("${PROJECT_NAME}_cpp11" ${CMAKE_THREAD_LIBS_INIT})
+    endif()
 endif()
 
 # OpenMP

@@ -110,7 +110,7 @@ void event::group::stop()
     #elif defined EMBEDDED_EVENT_PTHREADS
     pthread_join(this->task_handle, NULL);
     #elif defined EMBEDDED_EVENT_CPP11
-    this->task_handle.join();
+    this->task_handle->join();
     delete this->task_handle;
     #elif EMBEDDED_EVENT_OMP
     // Do nothing

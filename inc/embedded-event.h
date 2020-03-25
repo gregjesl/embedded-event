@@ -41,8 +41,9 @@ namespace event
         int32_t event;
     };
 
-    struct event_map
+    class event_map
     {
+    public:
         int32_t event_id;
         std::vector<callback> callbacks;
         event::mutex mutex;
@@ -86,7 +87,7 @@ namespace event
         std::deque<container*> event_queue;
         event::mutex event_mutex;
         
-        std::vector<event_map> handlers;
+        std::vector<event_map*> handlers;
         void process_handler_changes();
 
         event_map* find_map(int32_t event_id);
