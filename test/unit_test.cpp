@@ -1,7 +1,12 @@
 #include "embedded-event.h"
 #include "test.h"
 #include <string>
+#if WIN32
+#include <windows.h>
+#define usleep(a) Sleep(a)
+#else
 #include <unistd.h>
+#endif
 
 #if defined EMBEDDED_EVENT_PTHREADS || defined EMBEDDED_EVENT_CPP11
 #define TEST_USE_SEPERATE_THREAD
@@ -22,7 +27,7 @@ int32_t test_event = 11;
 // Handler count
 unsigned int handler_count = 0;
 
-void handler(void* context, const char* name, int32_t event, void* data)
+void handler(void* context, const char* name, const int32_t event, const void* data)
 {
     TEST_STRING_EQUAL((const char*)context, test_context);
     TEST_STRING_EQUAL(name, "TEST");

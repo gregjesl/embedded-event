@@ -24,22 +24,12 @@
 #include <deque>
 #include <vector>
 #include "embedded-event-mutex.h"
+#include "embedded-event-registration.h"
 
 /*! \brief Namespace for embedded events */
 namespace event
 {
-    typedef void(handler_fun)(void*, const char*, int32_t, void*);
-
-    struct callback
-    {
-        handler_fun *handler;
-        void* context;
-    };
-
-    struct registration : callback
-    {
-        int32_t event;
-    };
+    
 
     class event_map
     {
@@ -66,6 +56,7 @@ namespace event
          */
         group(const char* name);
         virtual ~group();
+        void add(const registration reg);
         registration add(int32_t event, handler_fun handler, void* context);
         void remove(registration reg);
         void post(int32_t event, const void* data, const size_t data_length);

@@ -18,13 +18,8 @@ event::group::~group()
     this->event_mutex.unlock();
 }
 
-event::registration event::group::add(int32_t event_id, event::handler_fun fun, void* context)
+void event::group::add(const event::registration reg)
 {
-    event::registration reg;
-    reg.handler = fun;
-    reg.context = context;
-    reg.event = event_id;
-
     // Lock the queues
     this->registration_mutex.lock();
 
@@ -33,19 +28,13 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
     while(i < this->remove_queue.size()) {
 
         // Check for same event
-        if(this->remove_queue.at(i).event != reg.event) {
-            i++;
-            continue;
-        }
+        if(this->remove_queue.at(i) == reg) {
 
-        // Check for same handler
-        if(this->remove_queue.at(i).handler != reg.handler) {
+            // Remove the unregistration
+            this->remove_queue.erase(this->remove_queue.begin() + i);
+        } else {
             i++;
-            continue;
         }
-
-        // Remove the unregistration
-        this->remove_queue.erase(this->remove_queue.begin() + i);
     }
 
     // Add the registration
@@ -56,6 +45,13 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
 
     // Signal the addition
     this->signal();
+}
+
+event::registration event::group::add(int32_t event_id, event::handler_fun fun, void* context)
+{
+    event::registration reg(event_id, fun, context);
+    
+    this->add(reg);
 
     // Return the registration
     return reg;
@@ -71,19 +67,13 @@ void event::group::remove(event::registration reg)
     while(i < this->add_queue.size()) {
 
         // Check for same event
-        if(this->add_queue.at(i).event != reg.event) {
-            i++;
-            continue;
-        }
+        if(this->add_queue.at(i) == reg) {
 
-        // Check for same handler
-        if(this->add_queue.at(i).handler != reg.handler) {
+            // Remove the unregistration
+            this->add_queue.erase(this->add_queue.begin() + i);
+        } else {
             i++;
-            continue;
         }
-
-        // Remove the unregistration
-        this->add_queue.erase(this->add_queue.begin() + i);
     }
 
     // Remove the registration
@@ -144,7 +134,7 @@ void event::group::dispatch()
         if(map && map->callbacks.size() > 0) {
             for(size_t i = 0; i < map->callbacks.size(); i++) {
                 event::callback cb = map->callbacks.at(i);
-                cb.handler(cb.context, this->name, evt->event_id, evt->data);
+                cb.raise(this->name, evt->event_id, evt->data);
             }
         }
         delete evt;
@@ -169,14 +159,14 @@ void event::group::process_handler_changes()
         this->add_queue.pop_front();
 
         // Find the entry for the event ID
-        event::event_map *map = this->find_map(reg.event);
+        event::event_map *map = this->find_map(reg.event());
 
         // Check for a valid entry
         if(!map) {
 
             // Create a new map
             map = new event::event_map();
-            map->event_id = reg.event;
+            map->event_id = reg.event();
             this->handlers.push_back(map);
         }
 
@@ -186,7 +176,7 @@ void event::group::process_handler_changes()
         // Check for an existing registration
         size_t i;
         for(i = 0; i < map->callbacks.size(); i++) {
-            if(map->callbacks.at(i).handler == reg.handler) {
+            if(map->callbacks.at(i) == reg) {
                 break;
             }
         }
@@ -211,7 +201,7 @@ void event::group::process_handler_changes()
         this->remove_queue.pop_front();
 
         // Find the entry for the event ID
-        event::event_map *map = this->find_map(reg.event);
+        event::event_map *map = this->find_map(reg.event());
 
         // Check for a valid entry
         if(map) {
@@ -224,7 +214,7 @@ void event::group::process_handler_changes()
                 // Search for the registration
                 size_t i = 0;
                 while(i < map->callbacks.size()) {
-                    if(map->callbacks.at(i).handler == reg.handler) {
+                    if(map->callbacks.at(i) == reg) {
 
                         // Remove the registration
                         map->callbacks.erase(map->callbacks.begin() + i);
