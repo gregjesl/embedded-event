@@ -1,6 +1,8 @@
 #include "embedded-event.h"
 
-#if defined ESP_PLATFORM || EMBEDDED_EVENT_PTHREADS
+#if defined ESP_PLATFORM
+void event::group::run_task(void *arg)
+#elif defined EMBEDDED_EVENT_PTHREADS
 void *event::group::run_task(void *arg)
 #else
 void event::group::run_task()
@@ -47,7 +49,7 @@ void event::group::run_task()
     parent->cancellation_acknowledged = true;
     #endif
 
-    #if defined ESP_PLATFORM || EMBEDDED_EVENT_PTHREADS
+    #if defined EMBEDDED_EVENT_PTHREADS
     return NULL;
     #endif
 }

@@ -83,7 +83,9 @@ namespace event
 
         event_map* find_map(int32_t event_id);
 
-        #if defined ESP_PLATFORM || EMBEDDED_EVENT_PTHREADS
+        #if defined ESP_PLATFORM
+        static void run_task(void *arg);
+        #elif defined EMBEDDED_EVENT_PTHREADS
         static void *run_task(void *arg);
         #else
         void run_task();
