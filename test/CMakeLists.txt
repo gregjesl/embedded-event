@@ -23,7 +23,7 @@ if(CMAKE_USE_PTHREADS_INIT)
 endif()
 
 # CPP11
-if(Threads_FOUND)
+if(WIN32 AND Threads_FOUND)
     add_executable ("${PROJECT_NAME}_cpp11" unit_test.cpp ${sources})
     add_test(NAME "${PROJECT_NAME}_cpp11" COMMAND "${PROJECT_NAME}_cpp11")
     target_compile_definitions("${PROJECT_NAME}_cpp11"

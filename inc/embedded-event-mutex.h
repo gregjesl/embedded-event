@@ -30,7 +30,7 @@ namespace event
         virtual ~mutex();
         void lock();
         void unlock();
-    private:
+    protected:
         #if defined ESP_PLATFORM
         SemaphoreHandle_t p_mutex;
         #elif defined EMBEDDED_EVENT_PTHREADS

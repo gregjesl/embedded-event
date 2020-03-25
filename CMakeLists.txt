@@ -25,14 +25,17 @@ else()
         src/embedded-event.cpp
         src/embedded-container.cpp
         src/embedded-event-mutex.cpp
+        src/embedded-event-task.cpp
     )
 
     find_package(Threads)
     if(Threads_FOUND)
-        if(CMAKE_USE_PTHREADS_INIT AND THREADS_PREFER_PTHREAD_FLAG)
+        if(CMAKE_USE_PTHREADS_INIT)
             target_compile_definitions(${PROJECT_NAME}
                 PUBLIC EMBEDDED_EVENT_PTHREADS)
         else()
+            set(CMAKE_CXX_STANDARD 11)
+            set(CMAKE_CXX_STANDARD_REQUIRED ON)
             target_compile_definitions(${PROJECT_NAME}
                 PUBLIC EMBEDDED_EVENT_CPP11)
         endif()

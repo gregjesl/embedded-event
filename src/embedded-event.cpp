@@ -54,6 +54,9 @@ event::registration event::group::add(int32_t event_id, event::handler_fun fun, 
     // Unlock the queues
     this->registration_mutex.unlock();
 
+    // Signal the addition
+    this->signal();
+
     // Return the registration
     return reg;
 }
@@ -88,15 +91,26 @@ void event::group::remove(event::registration reg)
 
     // Unlock the queues
     this->registration_mutex.unlock();
+
+    // Signal the removal
+    this->signal();
 }
 
 void event::group::post(int32_t event, const void* data, const size_t data_length)
 {
+    // Lock the event queue
     this->event_mutex.lock();
+
+    // Add the event
     this->event_queue.push_back(
         new event::container(event, data, data_length)
     );
+
+    // Unlock the event queue
     this->event_mutex.unlock();
+
+    // Signal the event
+    this->signal();
 }
 
 event::event_map* event::group::find_map(int32_t event_id)
@@ -111,11 +125,20 @@ event::event_map* event::group::find_map(int32_t event_id)
 
 void event::group::dispatch()
 {
+    // Check for changes to the handlers before dispatching events
     this->process_handler_changes();
+
+    // Lock the event queue
     this->event_mutex.lock();
+
+    // Loop until the event queue is empty
     while(this->event_queue.size() > 0) {
+
+        // Pop the event from the front
         event::container *evt = this->event_queue.front();
         this->event_queue.pop_front();
+
+        // Unlock the event queue
         this->event_mutex.unlock();
         event::event_map *map = this->find_map(evt->event_id);
         if(map && map->callbacks.size() > 0) {
@@ -158,6 +181,9 @@ void event::group::process_handler_changes()
             map = &this->handlers.back();
         }
 
+        // Lock the map
+        map->mutex.lock();
+
         // Check for an existing registration
         size_t i;
         for(i = 0; i < map->callbacks.size(); i++) {
@@ -165,14 +191,15 @@ void event::group::process_handler_changes()
                 break;
             }
         }
-        if(i < map->callbacks.size()) {
+        if(i == map->callbacks.size()) {
             
-            // The hander is already registered
-            continue;
+            // The hander has not been registered
+            // Add the handler
+            map->callbacks.push_back(reg);
         }
 
-        // Add the handler
-        map->callbacks.push_back(reg);
+        // Unlock the map
+        map->mutex.unlock();
     }
 
     // Loop until all removes are adjuticated
@@ -188,30 +215,46 @@ void event::group::process_handler_changes()
         event::event_map *map = this->find_map(reg.event);
 
         // Check for a valid entry
-        if(map && map->callbacks.size() > 0) {
+        if(map) {
 
-            // Search for the registration
-            size_t i = 0;
-            while(i < map->callbacks.size()) {
-                if(map->callbacks.at(i).handler == reg.handler) {
+            // Lock the map
+            map->mutex.lock();
 
-                    // Remove the registration
-                    map->callbacks.erase(map->callbacks.begin() + i);
-                } else {
+            // Check for any callbacks
+            if(map->callbacks.size() > 0) {
+                // Search for the registration
+                size_t i = 0;
+                while(i < map->callbacks.size()) {
+                    if(map->callbacks.at(i).handler == reg.handler) {
 
-                    // Registration not found
-                    i++;
+                        // Remove the registration
+                        map->callbacks.erase(map->callbacks.begin() + i);
+                    } else {
+
+                        // Registration not found
+                        i++;
+                    }
                 }
             }
-            
+
             // Check for an empty map
             if(map->callbacks.size() == 0) {
 
                 // Find the map index
                 const size_t index = map - &this->handlers[0];
 
+                // Unlock the map
+                map->mutex.unlock();
+
+                // WARNING: Potential race condition?
+                // Make maps pointers? 
+
                 // Erase the element
                 this->handlers.erase(this->handlers.begin() + index);
+            } else {
+                
+                // Unlock the map
+                map->mutex.unlock();
             }
         }
     }
