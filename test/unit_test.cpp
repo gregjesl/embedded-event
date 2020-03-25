@@ -39,6 +39,8 @@ void handler(void* context, const char* name, const int32_t event, const void* d
     #endif
 }
 
+event::registration reg(test_event, handler, (void*)test_context);
+
 #ifdef ESP_PLATFORM
 int app_main(void)
 #else
@@ -54,7 +56,7 @@ int main(void)
     #endif
 
     // Subscribe to an event
-    event::registration reg = test.add(test_event, handler, (void*)test_context);
+    test.add(reg);
 
     // Publish the event
     test.post(test_event, (void*)data_string, 13 * sizeof(char));
