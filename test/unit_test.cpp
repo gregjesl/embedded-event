@@ -73,7 +73,7 @@ int main(void)
 
     #ifdef EMBEDDED_EVENT_OMP
     exit(0);
-    #endif
+    #else
 
     // Publish a different event
     test.post(test_event + 1, NULL, 0);
@@ -122,4 +122,6 @@ int main(void)
     // Stop the task
     test.stop();
     #endif
+
+    #endif // OpenMP exclusion
 }
