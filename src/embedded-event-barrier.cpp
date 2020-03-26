@@ -64,6 +64,15 @@ void event::barrier::wait()
     #endif
 }
 
+#ifdef EMBEDDED_EVENT_OMP
+void event::barrier::wait(bool *flag)
+{
+    while(!this->is_released && !(*flag))
+        usleep(1);
+    this->is_released = !(*flag);
+}
+#endif
+
 void event::barrier::signal()
 {
     #if defined ESP_PLATFORM

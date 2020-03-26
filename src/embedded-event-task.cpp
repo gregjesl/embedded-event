@@ -19,7 +19,11 @@ void event::group::run_task()
         // Dispatch events
         parent->dispatch();
 
+        #ifndef EMBEDDED_EVENT_OMP
         parent->sync_point.wait();
+        #else
+        parent->sync_point.wait(&parent->cancellation_requested);
+        #endif
     }
 
     #ifndef EMBEDDED_EVENT_OMP
@@ -55,6 +59,7 @@ void event::group::run()
     {
         this->run_task();
     }
+    this->cancellation_acknowledged = true;
     #elif defined EMBEDDED_EVENT_NO_THREADING
     this->run_task();
     #endif

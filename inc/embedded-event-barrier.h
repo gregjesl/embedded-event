@@ -19,6 +19,9 @@ namespace event
         barrier();
         virtual ~barrier();
         void wait();
+        #ifdef EMBEDDED_EVENT_OMP
+        void wait(bool *flag);
+        #endif
         void signal();
     private:
         bool is_released;
