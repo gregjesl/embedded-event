@@ -59,14 +59,13 @@ event::registration reg(test_event, handler, (void*)test_context);
 event::registration reg2(test_event + 1, handler2, (void*)test_context);
 
 #if defined ESP_PLATFORM
-void event_pump(void *arg)
+void event_pump()
 #elif defined EMBEDDED_EVENT_PTHREADS
-void *event_pump(void *arg)
+void *event_pump(void*)
 #else
-void event_pump(void *arg)
+void event_pump()
 #endif
 {
-    arg = NULL;
     while(!shutdown_signal) {
         test.post(test_event + 1, (void*)data_string, 13 * sizeof(char));
         usleep(10);
@@ -149,6 +148,13 @@ int main(void)
 
     // Verify the result
     TEST_TRUE(handler_count_2 >= 10);
+
+    // Shut down
+    #if defined EMBEDDED_EVENT_PTHREADS
+    pthread_join(task_handle, NULL);
+    #elif defined EMBEDDED_EVENT_CPP11
+    task_handle.join();
+    #endif
 
     #endif
 }
