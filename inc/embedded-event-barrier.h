@@ -3,7 +3,8 @@
 
 #if defined ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#define BARRIER_RELEASED (1 << 0)
 #elif defined EMBEDDED_EVENT_PTHREADS
 #include <pthread.h>
 #elif defined EMBEDDED_EVENT_CPP11
@@ -26,7 +27,7 @@ namespace event
     private:
         bool is_released;
         #if defined ESP_PLATFORM
-        TaskHandle_t task_handle;
+        EventGroupHandle_t p_event_group;
         #elif defined EMBEDDED_EVENT_PTHREADS
         pthread_mutex_t p_mutex;
         pthread_cond_t p_condition;
