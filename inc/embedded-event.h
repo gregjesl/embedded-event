@@ -26,20 +26,11 @@
 #include "embedded-event-mutex.h"
 #include "embedded-event-registration.h"
 #include "embedded-event-barrier.h"
+#include "embedded-event-link.h"
 
 /*! \brief Namespace for embedded events */
 namespace event
 {
-    
-
-    class event_map
-    {
-    public:
-        int32_t event_id;
-        std::vector<callback> callbacks;
-        event::mutex mutex;
-    };
-
     class container
     {
     public:
@@ -61,9 +52,12 @@ namespace event
         registration add(int32_t event, handler_fun handler, void* context);
         void remove(registration reg);
         void post(int32_t event, const void* data, const size_t data_length);
+        void wait_for(int32_t event);
         void dispatch();
         void run();
         void stop();
+        void clear_events();
+        void join();
 
         #if defined ESP_PLATFORM
         void set_task_priority(const UBaseType_t priority);
@@ -79,10 +73,10 @@ namespace event
         std::deque<container*> event_queue;
         event::mutex event_mutex;
         
-        std::vector<event_map*> handlers;
+        std::vector<link*> handlers;
         void process_handler_changes();
 
-        event_map* find_map(int32_t event_id);
+        link* find_link(int32_t event_id);
 
         #if defined ESP_PLATFORM
         static void run_task(void *arg);

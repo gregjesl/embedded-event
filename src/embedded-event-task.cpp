@@ -65,13 +65,12 @@ void event::group::stop()
     // Set the cancellation flag
     this->cancellation_requested = true;
 
-    // Signal until the threads have responded
-    #ifndef EMBEDDED_EVENT_OMP
-    while(!this->cancellation_acknowledged) {
-        this->sync_point.signal();
-    }
-    #endif
+    // Signal the cancellation
+    this->sync_point.signal();
+}
 
+void event::group::join()
+{
     // Wait for the threads to shut down
     #if defined ESP_PLATFORM
     vTaskDelete(this->task_handle);

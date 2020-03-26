@@ -7,6 +7,7 @@ set (SRCS
     src/embedded-event-task.cpp
     src/embedded-event-barrier.cpp
     src/embedded-event-registration.cpp
+    src/embedded-event-link.cpp
 )
 
 if (ESP_PLATFORM)

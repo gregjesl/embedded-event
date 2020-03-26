@@ -2,8 +2,9 @@
 #include "test.h"
 #include <string>
 #if WIN32
-#include <windows.h>
-#define usleep(a) Sleep(a)
+#include <chrono>
+#include <thread>
+#define usleep(a) std::this_thread::sleep_for(std::chrono::microseconds(a));
 #else
 #include <unistd.h>
 #endif
@@ -26,6 +27,10 @@ int32_t test_event = 11;
 
 // Handler count
 unsigned int handler_count = 0;
+unsigned int handler_count_2 = 0;
+
+// Shutdown signal
+bool shutdown_signal = false;
 
 void handler(void* context, const char* name, const int32_t event, const void* data)
 {
@@ -34,12 +39,43 @@ void handler(void* context, const char* name, const int32_t event, const void* d
     TEST_STRING_EQUAL(data_string, (const char*)data);
     TEST_EQUAL(test_event, event);
     handler_count++;
-    #ifdef EMBEDDED_EVENT_OMP
-    test.stop();
-    #endif
+    if(handler_count < 100) {
+        test.post(test_event, (void*)data_string, 13 * sizeof(char));
+    } else {
+        test.stop();
+    }
+}
+
+void handler2(void* context, const char* name, const int32_t event, const void* data)
+{
+    TEST_STRING_EQUAL((const char*)context, test_context);
+    TEST_STRING_EQUAL(name, "TEST");
+    TEST_STRING_EQUAL(data_string, (const char*)data);
+    TEST_EQUAL(test_event + 1, event);
+    handler_count_2++;
 }
 
 event::registration reg(test_event, handler, (void*)test_context);
+event::registration reg2(test_event + 1, handler2, (void*)test_context);
+
+#if defined ESP_PLATFORM
+void event_pump(void *arg)
+#elif defined EMBEDDED_EVENT_PTHREADS
+void *event_pump(void *arg)
+#else
+void event_pump(void *arg)
+#endif
+{
+    arg = NULL;
+    while(!shutdown_signal) {
+        test.post(test_event + 1, (void*)data_string, 13 * sizeof(char));
+        usleep(10);
+    }
+
+    #if EMBEDDED_EVENT_PTHREADS
+    return NULL;
+    #endif
+}
 
 #ifdef ESP_PLATFORM
 int app_main(void)
@@ -49,81 +85,70 @@ int main(void)
 {
     // Verify the starting condition
     TEST_EQUAL(handler_count, 0);
-
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Start the task
-    test.run();
-    #endif
+    TEST_EQUAL(handler_count_2, 0);
 
     // Subscribe to an event
     test.add(reg);
+    test.add(reg2);
 
-    // Publish the event
+    // Publish the first event
     test.post(test_event, (void*)data_string, 13 * sizeof(char));
 
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Wait for the event to be processed
-    usleep(100);
-    #elif defined EMBEDDED_EVENT_OMP
+    // Run the dispatcher
     test.run();
-    #else
-    test.dispatch();
-    #endif
 
-    // Verify the event was processed
-    TEST_EQUAL(handler_count, 1);
+    // Wait for the conclusion
+    test.join();
 
-    #ifdef EMBEDDED_EVENT_OMP
+    // Verify the result
+    TEST_TRUE(handler_count >= 100);
+    TEST_EQUAL(handler_count_2, 0);
+
+    // Clear any pending events
+    test.clear_events();
+
+    // This concludes the test for no threading and OpenMP
+    #if defined EMBEDDED_EVENT_NO_THREADING || defined EMBEDDED_EVENT_OMP
     exit(0);
     #else
 
-    // Publish a different event
-    test.post(test_event + 1, NULL, 0);
-
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Wait for the event to be processed
-    usleep(100);
-    #else
-    test.dispatch();
+    // Start a message pump
+    #if defined ESP_PLATFORM
+    xTaskCreatePinnedToCore(
+        event_pump, 
+        "EVENT-PUMP", 
+        2048, 
+        NULL,
+        5, 
+        NULL, 
+        0
+    );
+    #elif defined EMBEDDED_EVENT_PTHREADS
+    pthread_t task_handle;
+    pthread_create(&task_handle, NULL, event_pump, NULL);
+    #elif defined EMBEDDED_EVENT_CPP11
+    std::thread task_handle(event_pump);
     #endif
 
-    // Verify the handler is not called
-    TEST_EQUAL(handler_count, 1);
+    // Start processing messages
+    test.run();
 
-    // Post the event twice
-    test.post(test_event, (void*)data_string, 13 * sizeof(char));
-    test.post(test_event, (void*)data_string, 13 * sizeof(char));
+    // Test the wait function
+    for(size_t i = 0; i < 10; i++) {
+        test.wait_for(test_event + 1);
+    }
 
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Wait for the event to be processed
-    usleep(100);
-    #else
-    test.dispatch();
-    #endif
+    // Stop the message pump
+    shutdown_signal = true;
 
-    // Verify the handler was called
-    TEST_EQUAL(handler_count, 3);
-
-    // Unsubscribe from the event
-    test.remove(reg);
-
-    // Post an event
-    test.post(test_event, (void*)data_string, 13 * sizeof(char));
-
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Wait for the event to be processed
-    usleep(100);
-    #else
-    test.dispatch();
-    #endif
-
-    // Verify the handler was not called
-    TEST_EQUAL(handler_count, 3);
-
-    #ifdef TEST_USE_SEPERATE_THREAD
-    // Stop the task
+    // Stop the event group
     test.stop();
-    #endif
 
-    #endif // OpenMP exclusion
+    // Wait for the test group to finish
+    test.join();
+
+    // Verify the result
+    TEST_TRUE(handler_count_2 >= 10);
+
+    #endif
 }
