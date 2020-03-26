@@ -91,6 +91,7 @@ namespace event
         barrier sync_point;
 
         #if defined ESP_PLATFORM
+        TaskHandle_t task_handle;
         UBaseType_t p_priority;
         uint32_t p_depth;
         BaseType_t p_core;
