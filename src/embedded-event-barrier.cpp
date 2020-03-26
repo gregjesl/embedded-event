@@ -52,9 +52,9 @@ void event::barrier::wait()
     this->is_released = false;
     pthread_mutex_unlock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_CPP11
-    std::unique_lock<std::mutex> lk(parent->p_mutex);
+    std::unique_lock<std::mutex> lk(this->p_mutex);
     while(!this->is_released)
-        parent->p_condition.wait(lk);
+        this->p_condition.wait(lk);
     this->is_released = false;
     lk.unlock();
     #else
@@ -75,7 +75,7 @@ void event::barrier::signal()
     pthread_cond_signal(&this->p_condition);
     pthread_mutex_unlock(&this->p_mutex);
     #elif defined EMBEDDED_EVENT_CPP11
-    std::unique_lock<std::mutex> lk(parent->p_mutex);
+    std::unique_lock<std::mutex> lk(this->p_mutex);
     this->is_released = true;
     this->p_condition.notify_all();
     #else
