@@ -44,7 +44,7 @@ void event::group::add(const event::registration reg)
     this->registration_mutex.unlock();
 
     // Signal the addition
-    this->signal();
+    this->sync_point.signal();
 }
 
 event::registration event::group::add(int32_t event_id, event::handler_fun fun, void* context)
@@ -83,7 +83,7 @@ void event::group::remove(event::registration reg)
     this->registration_mutex.unlock();
 
     // Signal the removal
-    this->signal();
+    this->sync_point.signal();
 }
 
 void event::group::post(int32_t event, const void* data, const size_t data_length)
@@ -100,7 +100,7 @@ void event::group::post(int32_t event, const void* data, const size_t data_lengt
     this->event_mutex.unlock();
 
     // Signal the event
-    this->signal();
+    this->sync_point.signal();
 }
 
 event::event_map* event::group::find_map(int32_t event_id)

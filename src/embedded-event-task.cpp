@@ -14,36 +14,13 @@ void event::group::run_task()
     event::group *parent = this;
     #endif
 
-    #if defined EMBEDDED_EVENT_PTHREADS
-    pthread_mutex_lock(&parent->p_condition_mutex);
-    #endif
-
     while(!parent->cancellation_requested)
     {
-        #if defined EMBEDDED_EVENT_CPP11
-        std::unique_lock<std::mutex> lk(parent->p_condition_mutex);
-        #endif
-
         // Dispatch events
         parent->dispatch();
 
-        // Wait for signal
-        #if defined ESP_PLATFORM
-        ulTaskNotifyTake(
-            pdTRUE, // Clear on exit
-            10 / portTICK_PERIOD_MS// Check every 10 ms
-        );
-        #elif defined EMBEDDED_EVENT_PTHREADS
-        pthread_cond_wait(&parent->p_condition, &parent->p_condition_mutex);
-        #elif defined EMBEDDED_EVENT_CPP11
-        parent->p_condition.wait(lk);
-        lk.unlock();
-        #endif
+        parent->sync_point.wait();
     }
-
-    #if defined EMBEDDED_EVENT_PTHREADS
-    pthread_mutex_unlock(&parent->p_condition_mutex);
-    #endif
 
     #ifndef EMBEDDED_EVENT_OMP
     parent->cancellation_acknowledged = true;
@@ -51,17 +28,6 @@ void event::group::run_task()
 
     #if defined EMBEDDED_EVENT_PTHREADS
     return NULL;
-    #endif
-}
-
-void event::group::signal()
-{
-    #if defined ESP_PLATFORM
-    xTaskNotifyGive(this->task_handle);
-    #elif defined EMBEDDED_EVENT_PTHREADS
-    pthread_cond_signal(&this->p_condition);
-    #elif defined EMBEDDED_EVENT_CPP11
-    this->p_condition.notify_all();
     #endif
 }
 
@@ -102,7 +68,7 @@ void event::group::stop()
     // Signal until the threads have responded
     #ifndef EMBEDDED_EVENT_OMP
     while(!this->cancellation_acknowledged) {
-        this->signal();
+        this->sync_point.signal();
     }
     #endif
 

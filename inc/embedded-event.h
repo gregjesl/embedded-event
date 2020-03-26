@@ -25,6 +25,7 @@
 #include <vector>
 #include "embedded-event-mutex.h"
 #include "embedded-event-registration.h"
+#include "embedded-event-barrier.h"
 
 /*! \brief Namespace for embedded events */
 namespace event
@@ -93,21 +94,16 @@ namespace event
 
         bool cancellation_requested;
         bool cancellation_acknowledged;
-        void signal();
+        barrier sync_point;
 
         #if defined ESP_PLATFORM
-        TaskHandle_t task_handle;
         UBaseType_t p_priority;
         uint32_t p_depth;
         BaseType_t p_core;
         #elif defined EMBEDDED_EVENT_PTHREADS
         pthread_t task_handle;
-        pthread_mutex_t p_condition_mutex;
-        pthread_cond_t p_condition;
         #elif defined EMBEDDED_EVENT_CPP11
         std::thread *task_handle;
-        std::mutex p_condition_mutex;
-        std::condition_variable p_condition;
         #endif
     };
 }

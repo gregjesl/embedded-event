@@ -5,6 +5,7 @@ set (SRCS
     src/embedded-container.cpp
     src/embedded-event-mutex.cpp
     src/embedded-event-task.cpp
+    src/embedded-event-barrier.cpp
     src/embedded-event-registration.cpp
 )
 
