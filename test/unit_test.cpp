@@ -68,6 +68,7 @@ void event_pump()
 {
     while(!shutdown_signal) {
         test.post(test_event + 1, (void*)data_string, 13 * sizeof(char));
+        test.post(test_event + 2, (void*)data_string, 13 * sizeof(char));
         usleep(10);
     }
 
@@ -132,10 +133,21 @@ int main(void)
     // Start processing messages
     test.run();
 
-    // Test the wait function
-    const int32_t waiters[2] = { test_event, test_event + 1};
-    for(size_t i = 0; i < 10; i++) {
-        test.wait_any(waiters, 2);
+    // Test the wait_any function
+    {
+        const int32_t waiters[2] = { test_event, test_event + 1};
+        for(size_t i = 0; i < 10; i++) {
+            test.wait_any(waiters, 2);
+        }
+    }
+    
+
+    // Test the wait_all function
+    {
+        const int32_t waiters[2] = { test_event + 1, test_event + 2};
+        for(size_t i = 0; i < 10; i++) {
+            test.wait_all(waiters, 2);
+        }
     }
 
     // Stop the message pump

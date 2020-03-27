@@ -189,6 +189,77 @@ void event::group::wait_any(const int32_t *events, const size_t num_events)
     delete trigger;
 }
 
+void event::group::wait_all(const int32_t *events, const size_t num_events)
+{
+    // Create the array of barriers
+    event::barrier *triggers = new event::barrier[num_events];
+
+    // Iterate through the events
+    for(size_t i = 0; i < num_events; i++) {
+
+        // Find the entry for the event ID
+        event::link *map = this->find_link(events[i]);
+
+        // Check for a valid entry
+        if(!map) {
+
+            // Create a new map
+            map = new event::link(events[i]);
+            this->handlers.push_back(map);
+        }
+
+        // Lock the trigger
+        map->lock();
+
+        // Add the trigger
+        map->add(triggers + i);
+
+        // Unlock the map
+        map->unlock();
+    }
+
+    // Unlock the registration mutex
+    this->registration_mutex.unlock();
+
+    // Wait for each barrier
+    for(size_t i = 0; i < num_events; i++)
+    {
+        (triggers + i)->wait();
+    }
+
+    // Lock the addition queue
+    this->registration_mutex.lock();
+
+    // Iterate through the events
+    for(size_t i = 0; i < num_events; i++) {
+
+        // Find the entry for the event ID
+        event::link *map = this->find_link(events[i]);
+
+        // Check for a valid entry
+        if(!map) {
+
+            // Trigger is cleared
+            continue;
+        }
+
+        // Lock the trigger
+        map->lock();
+
+        // Add the trigger
+        map->remove(triggers + i);
+
+        // Unlock the map
+        map->unlock();
+    }
+
+    // Unlock the registration mutex
+    this->registration_mutex.unlock();
+
+    // Delete the triggers
+    delete[] triggers;
+}
+
 void event::group::dispatch()
 {
     // Check for changes to the handlers before dispatching events
