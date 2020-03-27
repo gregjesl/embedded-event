@@ -44,6 +44,25 @@ void event::link::remove(event::callback handler)
     }
 }
 
+void event::link::remove(event::barrier *checkpoint)
+{
+    // Iterate through all checkpoint
+    size_t i = 0;
+    while(i < this->triggers.size()) {
+
+        // Compare the checkpoint
+        if(this->triggers.at(i) == checkpoint) {
+
+            // Remove the checkpoint
+            this->triggers.erase(this->triggers.begin() + i);
+        } else {
+
+            // Move to the next checkpoint
+            i++;
+        }
+    }
+}
+
 void event::link::process(const char *name, void *data)
 {
     // Iterate through all callbacks

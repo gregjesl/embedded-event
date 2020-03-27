@@ -53,6 +53,7 @@ namespace event
         void remove(registration reg);
         void post(int32_t event, const void* data, const size_t data_length);
         void wait_for(int32_t event);
+        void wait_any(const int32_t *events, const size_t num_events);
         void dispatch();
         void run();
         void stop();

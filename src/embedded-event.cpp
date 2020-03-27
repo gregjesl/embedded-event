@@ -115,31 +115,40 @@ event::link* event::group::find_link(int32_t event_id)
 
 void event::group::wait_for(int32_t event)
 {
+    this->wait_any(&event, 1);
+}
+
+void event::group::wait_any(const int32_t *events, const size_t num_events)
+{
     // Lock the addition queue
     this->registration_mutex.lock();
-
-    // Find the entry for the event ID
-    event::link *map = this->find_link(event);
-
-    // Check for a valid entry
-    if(!map) {
-
-        // Create a new map
-        map = new event::link(event);
-        this->handlers.push_back(map);
-    }
-
-    // Lock the link
-    map->lock();
 
     // Create a barrier
     event::barrier *trigger = new event::barrier();
 
-    // Record the barrier
-    map->add(trigger);
+    // Iterate through the events
+    for(size_t i = 0; i < num_events; i++) {
 
-    // Unlock the link
-    map->unlock();
+        // Find the entry for the event ID
+        event::link *map = this->find_link(events[i]);
+
+        // Check for a valid entry
+        if(!map) {
+
+            // Create a new map
+            map = new event::link(events[i]);
+            this->handlers.push_back(map);
+        }
+
+        // Lock the trigger
+        map->lock();
+
+        // Add the trigger
+        map->add(trigger);
+
+        // Unlock the map
+        map->unlock();
+    }
 
     // Unlock the registration mutex
     this->registration_mutex.unlock();
@@ -147,7 +156,36 @@ void event::group::wait_for(int32_t event)
     // Wait for the event
     trigger->wait();
 
-    // Delete teh barrier
+    // Lock the addition queue
+    this->registration_mutex.lock();
+
+    // Iterate through the events
+    for(size_t i = 0; i < num_events; i++) {
+
+        // Find the entry for the event ID
+        event::link *map = this->find_link(events[i]);
+
+        // Check for a valid entry
+        if(!map) {
+
+            // Trigger is cleared
+            continue;
+        }
+
+        // Lock the trigger
+        map->lock();
+
+        // Add the trigger
+        map->remove(trigger);
+
+        // Unlock the map
+        map->unlock();
+    }
+
+    // Unlock the registration mutex
+    this->registration_mutex.unlock();
+
+    // Delete the barrier
     delete trigger;
 }
 

@@ -133,8 +133,9 @@ int main(void)
     test.run();
 
     // Test the wait function
+    const int32_t waiters[2] = { test_event, test_event + 1};
     for(size_t i = 0; i < 10; i++) {
-        test.wait_for(test_event + 1);
+        test.wait_any(waiters, 2);
     }
 
     // Stop the message pump

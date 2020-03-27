@@ -17,6 +17,7 @@ namespace event
         void add(event::callback handler);
         void add(event::barrier *checkpoint);
         void remove(event::callback cb);
+        void remove(event::barrier *checkpoint);
         void process(const char* name, void* data);
         inline bool is_empty() const { return this->handlers.empty() && this->triggers.empty(); }
         inline void lock() { this->p_mutex.lock(); }
