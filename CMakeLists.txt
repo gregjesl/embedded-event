@@ -51,9 +51,6 @@ else()
             PUBLIC EMBEDDED_EVENT_NO_THREADING)
     endif()
 
-    target_compile_definitions("${PROJECT_NAME}"
-        PUBLIC EMBEDDED_EVENT_NO_THREADING)
-
     # Support testing
     enable_testing()
     add_subdirectory(test)
