@@ -32,7 +32,7 @@ unsigned int handler_count_2 = 0;
 // Shutdown signal
 bool shutdown_signal = false;
 
-void handler(void* context, const char* name, const int32_t event, const void* data)
+EMBEDDED_EVENT_HANDLER(handler, context, name, event, data)
 {
     TEST_STRING_EQUAL((const char*)context, test_context);
     TEST_STRING_EQUAL(name, "TEST");
@@ -46,7 +46,7 @@ void handler(void* context, const char* name, const int32_t event, const void* d
     }
 }
 
-void handler2(void* context, const char* name, const int32_t event, const void* data)
+EMBEDDED_EVENT_HANDLER(handler2, context, name, event, data)
 {
     TEST_STRING_EQUAL((const char*)context, test_context);
     TEST_STRING_EQUAL(name, "TEST");

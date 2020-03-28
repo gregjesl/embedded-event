@@ -19,6 +19,8 @@
 #define EMBEDDED_EVENT_NO_THREADING
 #endif
 
+#define EMBEDDED_EVENT_HANDLER(function, context, group, event, data) void function (void* context, const char* group, const int32_t event, const void* data)
+
 #include <stdlib.h>
 #include <cstdint>
 #include <deque>
