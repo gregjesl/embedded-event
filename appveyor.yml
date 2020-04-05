@@ -10,27 +10,12 @@ configuration:
 - Debug
 - Release
 
-for:
-  - 
-    matrix:
-      only:
-        - configuration: Debug
-    environment:
-      config: Debug
-
-  - 
-    matrix:
-      only:
-        - configuration: Release
-    environment:
-      config: Release
-
 before_build:
-  - cmake -H. -B_builds -DCMAKE_BUILD_TYPE=%config%
+  - cmake -H. -B_builds -DCMAKE_BUILD_TYPE=%CONFIGURATION%
 
 build_script:
-  - cmake --build _builds --config %config%
+  - cmake --build _builds --config %CONFIGURATION%
 
 test_script:
   - ps: cd _builds
-  - ctest -VV -C %config%
+  - ctest -VV -C %CONFIGURATION%
