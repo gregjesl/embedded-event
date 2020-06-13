@@ -1,45 +1,14 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required (VERSION 3.8)
 
-include_directories(../inc)
-
-file(GLOB sources
-    "../src/*.cpp"
+file(GLOB tests
+    "*.c"
 )
 
-# No threading
-add_executable ("${PROJECT_NAME}_no_threading" unit_test.cpp ${sources})
-add_test(NAME "${PROJECT_NAME}_no_threading" COMMAND "${PROJECT_NAME}_no_threading")
-target_compile_definitions("${PROJECT_NAME}_no_threading"
-    PUBLIC EMBEDDED_EVENT_NO_THREADING)
-
-# Pthreads
-find_package(Threads)
-if(CMAKE_USE_PTHREADS_INIT)
-    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-    add_executable ("${PROJECT_NAME}_pthreads" unit_test.cpp ${sources})
-    add_test(NAME "${PROJECT_NAME}_pthreads" COMMAND "${PROJECT_NAME}_pthreads")
-    target_compile_definitions("${PROJECT_NAME}_pthreads"
-        PUBLIC EMBEDDED_EVENT_PTHREADS)
-    target_link_libraries ("${PROJECT_NAME}_pthreads" ${CMAKE_THREAD_LIBS_INIT})
-endif()
-
-# CPP11
-if(Threads_FOUND AND NOT APPLE)
-    add_executable ("${PROJECT_NAME}_cpp11" unit_test.cpp ${sources})
-    add_test(NAME "${PROJECT_NAME}_cpp11" COMMAND "${PROJECT_NAME}_cpp11")
-    target_compile_definitions("${PROJECT_NAME}_cpp11"
-        PUBLIC EMBEDDED_EVENT_CPP11)
-    if(CMAKE_USE_PTHREADS_INIT)
-        target_link_libraries ("${PROJECT_NAME}_cpp11" ${CMAKE_THREAD_LIBS_INIT})
-    endif()
-endif()
-
-# OpenMP
-find_package(OpenMP)
-if(OpenMP_FOUND)
-    add_executable ("${PROJECT_NAME}_omp" unit_test.cpp ${sources})
-    add_test(NAME "${PROJECT_NAME}_omp" COMMAND "${PROJECT_NAME}_omp")
-    target_compile_definitions("${PROJECT_NAME}_omp"
-        PUBLIC EMBEDDED_EVENT_OMP)
-    target_link_libraries("${PROJECT_NAME}_omp" PRIVATE OpenMP::OpenMP_CXX)
-endif()
+foreach(test ${tests})
+    string(REGEX REPLACE ".*/" "" test_name "${test}")
+    string(REGEX REPLACE ".c$" "" test_name "${test_name}")
+    set(full_name "${PROJECT_NAME}_${test_name}")
+    add_executable ("${full_name}_test" ${test})
+    add_test(NAME "${full_name}" COMMAND "${full_name}_test")
+    target_link_libraries ("${full_name}_test" ${PROJECT_NAME})
+endforeach()

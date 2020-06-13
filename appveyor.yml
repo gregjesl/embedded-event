@@ -1,6 +1,7 @@
 image:
 - Ubuntu
 - Visual Studio 2015
+- macos
 
 platform:
   - x86
