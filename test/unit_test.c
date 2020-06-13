@@ -1,12 +1,5 @@
 #include "embedded-event.h"
 #include "test.h"
-#if WIN32
-#include <chrono>
-#include <thread>
-#define usleep(a) std::this_thread::sleep_for(std::chrono::microseconds(a));
-#else
-#include <unistd.h>
-#endif
 
 // Create the event group
 embedded_event_group_t test;

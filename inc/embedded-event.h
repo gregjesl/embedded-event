@@ -4,6 +4,7 @@
 #define EMBEDDED_EVENT_HANDLER(function, event, data, context) void function (int32_t event, void* data, void* context)
 
 #include <stdlib.h>
+#include <stdint.h>
 #include "embedded_event_registration.h"
 #include "macrothreading_thread.h"
 #include "macrothreading_mutex.h"

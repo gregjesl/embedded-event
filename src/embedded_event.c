@@ -167,7 +167,7 @@ void __process_handler_changes(embedded_event_group_t group)
         signal = reg->signal;
 
         // Look for an existing registration
-        embedded_event_registration_t existing = embedded_event_registration_find(&group->handlers, reg->event);
+        existing = embedded_event_registration_find(&group->handlers, reg->event);
 
         if(existing != NULL) {
             embedded_event_callback_remove(&existing->callbacks, reg->callbacks);

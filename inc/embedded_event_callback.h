@@ -2,8 +2,9 @@
 #define EMBEDDED_EVENT_CALLBACK_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
-typedef void(embedded_event_handler_t)(int32_t, void *, void *);
+typedef void(embedded_event_handler_t)(int32_t, void*, void*);
 
 typedef struct embedded_event_callback_struct
 {

@@ -2,6 +2,7 @@
 #define EMBEDDED_EVENT_REGISTRATION_H
 
 #include <stdlib.h>
+#include <stdint.h>
 #include "embedded_event_callback.h"
 #include "macrothreading_condition.h"
 
