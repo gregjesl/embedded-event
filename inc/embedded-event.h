@@ -44,6 +44,7 @@ embedded_event_group_t embedded_event_group_init();
 embedded_event_callback_t embedded_event_group_add(embedded_event_group_t group, int32_t event, embedded_event_handler_t handler, void *context, macrothread_condition_t signal);
 void embedded_event_group_remove(embedded_event_group_t group, int32_t event, embedded_event_callback_t callback, macrothread_condition_t signal);
 void embedded_event_group_post(embedded_event_group_t group, int32_t event, void *data, event_posted_callback_t *callback);
+void embedded_event_group_wait(embedded_event_group_t group, int32_t event);
 void embedded_event_group_start(embedded_event_group_t group);
 void embedded_event_group_stop(embedded_event_group_t group);
 void embedded_event_group_destroy(embedded_event_group_t group);

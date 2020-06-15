@@ -115,6 +115,41 @@ void embedded_event_group_post(embedded_event_group_t group, int32_t event, void
     macrothread_condition_signal(group->sync_point);
 }
 
+void __wait_signal(int32_t event, void *data, void *context)
+{
+    (void)event;
+    (void)data;
+
+    // Give the signal
+    macrothread_condition_signal((macrothread_condition_t)context);
+}
+
+void embedded_event_group_wait(embedded_event_group_t group, int32_t event)
+{
+    // Create the signal
+    macrothread_condition_t registration_signal = macrothread_condition_init();
+    macrothread_condition_t event_signal = macrothread_condition_init();
+
+    // Register for the event
+    embedded_event_callback_t cb = embedded_event_group_add(group, event, __wait_signal, event_signal, registration_signal);
+
+    // Wait for registration
+    macrothread_condition_wait(registration_signal);
+
+    // Wait for the event
+    macrothread_condition_wait(event_signal);
+
+    // Unregister
+    embedded_event_group_remove(group, event, cb, registration_signal);
+
+    // Wait for the unregistration
+    macrothread_condition_wait(registration_signal);
+
+    // Destroy the signals
+    macrothread_condition_destroy(registration_signal);
+    macrothread_condition_destroy(event_signal);
+}
+
 void __process_handler_changes(embedded_event_group_t group)
 {
     // Lock the registration

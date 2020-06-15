@@ -22,6 +22,9 @@ macrothread_condition_t add_signal;
 macrothread_condition_t remove_signal;
 macrothread_condition_t data_signal;
 
+int32_t wait_event = 2011;
+bool stop_event_pump = false;
+
 void donehandler(int32_t event, void *data_ptr)
 {
     int32_t data = *((int32_t*)data_ptr);
@@ -46,6 +49,16 @@ EMBEDDED_EVENT_HANDLER(handler, event, data_ptr, context)
     TEST_STRING_EQUAL((const char*)context, test_context);
 
     message_count++;
+}
+
+void event_pump(void *arg)
+{
+    (void)arg;
+
+    while(!stop_event_pump) {
+        embedded_event_group_post(test, wait_event, NULL, NULL);
+        macrothread_delay(10);
+    }
 }
 
 int main(void)
@@ -102,6 +115,17 @@ int main(void)
 
     // Wait for removal
     macrothread_condition_wait(remove_signal);
+
+    // Test the wait feature
+    macrothread_handle_t thread = macrothread_handle_init();
+    macrothread_start_thread(thread, event_pump, NULL);
+
+    // Wait for the event
+    embedded_event_group_wait(test, wait_event);
+
+    // Stop the wait test
+    stop_event_pump = true;
+    macrothread_join(thread);
 
     // Stop the event group
     embedded_event_group_stop(test);
