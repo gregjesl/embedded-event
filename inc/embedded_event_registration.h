@@ -1,6 +1,10 @@
 #ifndef EMBEDDED_EVENT_REGISTRATION_H
 #define EMBEDDED_EVENT_REGISTRATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include "embedded_event_callback.h"
@@ -20,5 +24,9 @@ void embedded_event_registration_remove(embedded_event_registration_t *first, em
 embedded_event_registration_t embedded_event_registration_find(const embedded_event_registration_t *first, int32_t event);
 void embedded_event_registration_clear(embedded_event_registration_t *first);
 embedded_event_registration_t embedded_event_registration_destroy(embedded_event_registration_t reg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

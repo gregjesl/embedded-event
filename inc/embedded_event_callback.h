@@ -1,6 +1,10 @@
 #ifndef EMBEDDED_EVENT_CALLBACK_H
 #define EMBEDDED_EVENT_CALLBACK_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -18,5 +22,9 @@ void embedded_event_callback_append(embedded_event_callback_t *first, embedded_e
 void embedded_event_callback_remove(embedded_event_callback_t *first, embedded_event_callback_t removal);
 void embedded_event_callback_clear(embedded_event_callback_t *first);
 embedded_event_callback_t embedded_event_callback_destroy(embedded_event_callback_t reg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

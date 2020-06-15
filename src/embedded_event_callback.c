@@ -2,10 +2,6 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 embedded_event_callback_t embedded_event_callback_init(embedded_event_handler_t handler, void *context)
 {
     embedded_event_callback_t result = (embedded_event_callback_t)malloc(sizeof(struct embedded_event_callback_struct));
@@ -89,7 +85,3 @@ embedded_event_callback_t embedded_event_callback_destroy(embedded_event_callbac
     free(reg);
     return result;
 }
-
-#ifdef __cplusplus
-}
-#endif

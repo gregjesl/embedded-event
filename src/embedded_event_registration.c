@@ -2,10 +2,6 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 embedded_event_registration_t embedded_event_registration_init(int32_t event)
 {
     embedded_event_registration_t result = (embedded_event_registration_t)malloc(sizeof(struct embedded_event_registration_struct));
@@ -104,7 +100,3 @@ embedded_event_registration_t embedded_event_registration_destroy(embedded_event
     free(reg);
     return result;
 }
-
-#ifdef __cplusplus
-}
-#endif

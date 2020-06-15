@@ -1,6 +1,10 @@
 #ifndef EMBEDDED_EVENT_H
 #define EMBEDDED_EVENT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define EMBEDDED_EVENT_HANDLER(function, event, data, context) void function (int32_t event, void* data, void* context)
 
 #include <stdlib.h>
@@ -43,5 +47,9 @@ void embedded_event_group_post(embedded_event_group_t group, int32_t event, void
 void embedded_event_group_start(embedded_event_group_t group);
 void embedded_event_group_stop(embedded_event_group_t group);
 void embedded_event_group_destroy(embedded_event_group_t group);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
