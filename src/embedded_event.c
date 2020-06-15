@@ -1,5 +1,9 @@
 #include "embedded-event.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void embedded_event_push(embedded_event_t *first, int32_t event, void *data, event_posted_callback_t callback)
 {
     embedded_event_t evt = (embedded_event_t)malloc(sizeof(struct embedded_event_struct));
@@ -298,3 +302,7 @@ void embedded_event_group_destroy(embedded_event_group_t group)
     macrothread_condition_destroy(group->sync_point);
     free(group);
 }
+
+#ifdef __cplusplus
+}
+#endif
